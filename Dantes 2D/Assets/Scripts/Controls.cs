@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Controls : MonoBehaviour
 {
@@ -69,15 +70,13 @@ public class Controls : MonoBehaviour
     #region collisions
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        print("collision detected");
-        if (collision.gameObject.tag == "Ground") 
+        if (collision.gameObject.tag == "Ground")
         {
             grounded = true;
-            print("touched grass");
-
-
         }
-
-        #endregion
     }
+    
+     #endregion
+
+
 }
