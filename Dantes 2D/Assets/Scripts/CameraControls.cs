@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -20,52 +21,82 @@ public class CameraControls : MonoBehaviour
 
     private void FixedUpdate()
     {
-        IsPanning = false;
+        
         Vector3 TargetPosition = target.position + offset;
         TargetPosition.z = transform.position.z;
 
+
+        //Look Up
         if (Input.GetKey(KeyCode.UpArrow))
         {
             TargetPosition.y += PanDistance;
             IsPanning = true;
-            PanCam(TargetPosition);
-
+            SmoothCam(TargetPosition, true);
         }
 
+        //Look Down
         if (Input.GetKey(KeyCode.DownArrow))
         {
             TargetPosition.y -= PanDistance;
             IsPanning = true;
-            PanCam(TargetPosition);
+            SmoothCam(TargetPosition, true);
         }
 
+        //Look Left
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             TargetPosition.x -= PanDistance;
             IsPanning = true;
-            PanCam(TargetPosition);
+            SmoothCam(TargetPosition, true);
         }
 
+        //Look Right
         if (Input.GetKey(KeyCode.RightArrow))
         {
             TargetPosition.x += PanDistance;
             IsPanning = true;
-            PanCam(TargetPosition);
+            SmoothCam(TargetPosition, true);
         }
 
-        if (IsPanning == false && transform.position == TargetPosition)
+        //case where the camera has been panned and needs to be returned to player
+        if (IsPanning == true && transform.position != TargetPosition)
         {
-            transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, Damping);
+        SmoothCam(TargetPosition, true); 
+        
         }
-        else if (IsPanning == false && transform.position != TargetPosition)
-        { 
-            PanCam(TargetPosition);
+
+         //Resets Panning State when it finishes returning to the player
+        if (IsPanning == true && transform.position == TargetPosition)
+        {
+            IsPanning = false;
+        
         }
+
+
+        if (IsPanning == false) { SmoothCam(TargetPosition, false); }
+
+        // if (IsPanning == false && transform.position == TargetPosition)
+        // {
+        //    PanCam(TargetPosition, false);
+        //}
+        // else if (IsPanning == false && transform.position != TargetPosition)
+        // { 
+        //     PanCam(TargetPosition, true);
+        // }
     }
 
-    private void PanCam(Vector3 TargetPosition)
-    { 
-    transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, PanDamping);
+    private void SmoothCam(Vector3 TargetPosition, bool Pan)
+    {
+    
+        if (Pan == true)
+        {
+        transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, PanDamping);
+        }
+        else
+        {
+         transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, Damping);
+        }
+
     }
     }
 
