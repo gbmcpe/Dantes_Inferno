@@ -15,6 +15,8 @@ public class CameraControls : MonoBehaviour
 
     private bool IsPanning = false;
 
+    private bool PanReturn = false;
+
     public Transform target;
 
     private Vector3 Velocity = Vector3.zero;
@@ -25,20 +27,23 @@ public class CameraControls : MonoBehaviour
         Vector3 TargetPosition = target.position + offset;
         TargetPosition.z = transform.position.z;
 
+        
 
         //Look Up
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            TargetPosition.y += PanDistance;
+            TargetPosition.y += PanDistance * 0.5f;
             IsPanning = true;
+            PanReturn = false;
             SmoothCam(TargetPosition, true);
         }
 
         //Look Down
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            TargetPosition.y -= PanDistance;
+            TargetPosition.y -= PanDistance*0.5f;
             IsPanning = true;
+            PanReturn = false;
             SmoothCam(TargetPosition, true);
         }
 
@@ -47,6 +52,7 @@ public class CameraControls : MonoBehaviour
         {
             TargetPosition.x -= PanDistance;
             IsPanning = true;
+            PanReturn = false;
             SmoothCam(TargetPosition, true);
         }
 
@@ -55,34 +61,35 @@ public class CameraControls : MonoBehaviour
         {
             TargetPosition.x += PanDistance;
             IsPanning = true;
+            PanReturn = false;
             SmoothCam(TargetPosition, true);
         }
 
-        //case where the camera has been panned and needs to be returned to player
-        if (IsPanning == true && transform.position != TargetPosition)
+        if (Input.anyKeyDown == false && IsPanning == true)
         {
-        SmoothCam(TargetPosition, true); 
-        
+            PanReturn = true;
         }
+        
 
-         //Resets Panning State when it finishes returning to the player
-        if (IsPanning == true && transform.position == TargetPosition)
+        //case where the camera has been panned and needs to be returned to player
+            if (PanReturn == true && transform.position != TargetPosition)
+            {
+                SmoothCam(TargetPosition, true);
+
+                print("Camera Returning!");
+            }
+
+        //case for Panning State when it finishes returning to the player
+        if (PanReturn == true && Vector3.Distance(transform.position, TargetPosition) < 0.1)
         {
             IsPanning = false;
-        
+            PanReturn = false;
+            print("Camera State Reset!");
+            SmoothCam(TargetPosition, false); 
         }
 
-
+        //case for normal camera state; no panning
         if (IsPanning == false) { SmoothCam(TargetPosition, false); }
-
-        // if (IsPanning == false && transform.position == TargetPosition)
-        // {
-        //    PanCam(TargetPosition, false);
-        //}
-        // else if (IsPanning == false && transform.position != TargetPosition)
-        // { 
-        //     PanCam(TargetPosition, true);
-        // }
     }
 
     private void SmoothCam(Vector3 TargetPosition, bool Pan)

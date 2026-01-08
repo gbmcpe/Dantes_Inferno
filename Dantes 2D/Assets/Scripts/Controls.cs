@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class Controls : MonoBehaviour
@@ -10,12 +12,35 @@ public class Controls : MonoBehaviour
 
     #region Variables
 
-    private Rigidbody2D player;
+
+  
 
     [SerializeField] private float hSpeed;
-    [SerializeField] private float vSpeed;
+    [SerializeField] private float vPressSpeed;
+    [SerializeField] private float vHoldSpeed;
+    [SerializeField] private float wSpeed;
+    [SerializeField] private float gravScaleUp;
+    [SerializeField] private float gravScaleDown;
 
+    [SerializeField] private float jBufferTime = 0.15f;
+     [SerializeField] private float jCoyoteTime = 0.2f;
+
+    public float groundCheckRadius = 0.2f;
+
+    public float wallCheckDistance = 1f;
+
+    public Transform groundCheck;
+     public LayerMask groundLayer;
+    private Rigidbody2D player;
+    private SpriteRenderer spriteRenderer;
+
+    private float jCoyoteCounter;
     private bool grounded = true;
+    private bool isTouchingWall = false;
+    //private bool isWallSliding = false;
+
+    
+    private float jBufferCounter;
     #endregion
 
     #region Awake, Start, Update
@@ -23,12 +48,25 @@ public class Controls : MonoBehaviour
     private void Awake()
     {
         player = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     // Update is called once per frame
     private void Update()
     {
-        pMovement();
+        float moveInput = Input.GetAxis("Horizontal");
+
+        CheckGrounded();
+        //CheckWallSliding();
+       
+        CoyoteTimer();
+        JumpBufferer();
+        GravityScaler();
+        pMovement(moveInput);
+         if (isTouchingWall == true)
+        { print("touchingwall"); }
+       HandleWallSliding(moveInput);
+
     }
 
     #endregion
@@ -36,27 +74,96 @@ public class Controls : MonoBehaviour
     #region Voids
 
     //Player Movement Method
-    private void pMovement()
+    private void pMovement(float moveInput)
     {
+
+
         //Strafing
-        player.linearVelocity = new Vector3(Input.GetAxis("Horizontal") * hSpeed, player.linearVelocity.y, 0);
 
-
-        //Jumping
-        if (Input.GetKey(KeyCode.Space)
-            && grounded)
+        
+        if (moveInput == 1 && !Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, groundLayer))
         {
-            player.linearVelocity = new Vector3(player.linearVelocity.x, vSpeed, 0);
-            grounded = false;
+             player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+             isTouchingWall=true;
+        }
+         else if (moveInput == -1 && !Physics2D.Raycast(transform.position, Vector2.left, wallCheckDistance, groundLayer))
+        {
+            player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+            isTouchingWall =true;
+        }
+        else
+        { player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+            isTouchingWall =false;
         }
 
+        //Jumping
+        if (jBufferCounter >0 )
+        {
+            if (grounded || jCoyoteCounter>0 )
+            {
+            player.linearVelocity = new Vector2(player.linearVelocity.x, vPressSpeed);
+            jCoyoteCounter = 0;
+            jBufferCounter = 0;
+            grounded= false;
+            }
+        }
+                    if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0)
+        {
+            player.AddForceY(vHoldSpeed);
+
+        }
     }
 
-    //Camera Movement Method
-    private void cMovement()
+    private void CheckGrounded()
+    { grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer); }
+
+
+//currently only seems to detect hitting the right of a wall
+    private void CheckWallSliding()
+    {isTouchingWall = Physics2D.Raycast(transform.position, spriteRenderer.flipX ? Vector2.left: Vector2.right, wallCheckDistance, groundLayer);}
+
+ 
+    private void HandleWallSliding(float moveInput)
     {
-
+        if (isTouchingWall == true && !grounded && moveInput == 0 && player.linearVelocityY <= 0)
+        {
+            print("Wallsliding engaged");
+           // isWallSliding = true;
+            player.linearVelocityY = -wSpeed;
+            
+        }
+        else
+        {
+            //isWallSliding = false;
+        }
     }
+
+    private void CoyoteTimer()
+    {
+      if (grounded)
+        { jCoyoteCounter = jCoyoteTime; }
+        else
+        { jCoyoteCounter -= Time.deltaTime; }
+    }
+
+    private void JumpBufferer()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        { jBufferCounter = jBufferTime; }
+        else
+        { jBufferCounter -= Time.deltaTime; }
+    }
+
+    private void GravityScaler()
+    {
+        if (player.linearVelocityY > 0)
+        {
+            player.gravityScale = gravScaleUp;
+        }
+        else player.gravityScale = gravScaleDown;
+    }
+
+
 
     //Interact Button
     private void Interact()
@@ -67,16 +174,42 @@ public class Controls : MonoBehaviour
 
     #endregion
 
-    #region collisions
-    private void OnCollisionEnter2D(Collision2D collision)
+    #region collisions / triggers
+
+    //Old jumping check
+
+    //private void OnCollisionEnter2D(Collision2D collision)
+    //{
+    //if (collision.gameObject.tag == "Ground")
+    // {
+    //     grounded = true;
+    // }
+    //}
+
+    private Vector2 SavePoint;
+
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (collision.gameObject.tag == "Ground")
+        if (other.gameObject.tag == "Checkpoint")
         {
-            grounded = true;
+            SavePoint = transform.position;
+            print("Save Point Reached");
         }
+        else if (other.gameObject.tag == "Obstacle")
+        {
+            if (SavePoint != null)
+                transform.position = SavePoint;
+            else
+            {
+                transform.position = Vector3.zero;
+            }
+        }
+
     }
-    
-     #endregion
+
+
+
+    #endregion
 
 
 }

@@ -4,8 +4,9 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - Ground
   - Interactable
+  - Obstacle
+  - Checkpoint
   layers:
   - Default
   - TransparentFX
@@ -13,7 +14,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - Ground
   - 
   - 
   - 
