@@ -19,6 +19,7 @@ public class Controls : MonoBehaviour
     [SerializeField] private float vPressSpeed;
     [SerializeField] private float vHoldSpeed;
     [SerializeField] private float wSpeed;
+    [SerializeField] private float cSpeed;
     [SerializeField] private float gravScaleUp;
     [SerializeField] private float gravScaleDown;
 
@@ -35,9 +36,10 @@ public class Controls : MonoBehaviour
     private SpriteRenderer spriteRenderer;
 
     private float jCoyoteCounter;
-    private bool grounded = true;
-    private bool isTouchingWall = false;
+    private bool grounded;
+    private bool isTouchingWall;
     //private bool isWallSliding = false;
+    private bool crouching;
 
     
     private float jBufferCounter;
@@ -56,9 +58,18 @@ public class Controls : MonoBehaviour
     {
         float moveInput = Input.GetAxis("Horizontal");
 
-        CheckGrounded();
-        //CheckWallSliding();
-       
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            transform.position += new Vector3(0, -0.25f, 0);
+            transform.localScale = new Vector2(1, 0.5f);
+            crouching = true;
+        }
+        else if (Input.GetKeyUp(KeyCode.S))
+        {
+        transform.position += new Vector3(0, 0.25f, 0);
+        gameObject.transform.localScale = new Vector3(1f, 1f, 0); crouching = false;
+        }
+    
         CoyoteTimer();
         JumpBufferer();
         GravityScaler();
@@ -67,6 +78,12 @@ public class Controls : MonoBehaviour
         { print("touchingwall"); }
        HandleWallSliding(moveInput);
 
+    }
+
+    private void FixedUpdate()
+    {
+        CheckGrounded();
+        //CheckWallSliding();   
     }
 
     #endregion
@@ -78,26 +95,30 @@ public class Controls : MonoBehaviour
     {
 
 
-        //Strafing
+    //Strafing
+        if (!Input.GetKey(KeyCode.S))
+        {
+        player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+        }
 
         
-        if (moveInput == 1 && !Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, groundLayer))
-        {
-             player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
-             isTouchingWall=true;
-        }
-         else if (moveInput == -1 && !Physics2D.Raycast(transform.position, Vector2.left, wallCheckDistance, groundLayer))
-        {
-            player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
-            isTouchingWall =true;
-        }
-        else
-        { player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
-            isTouchingWall =false;
-        }
+        // if (moveInput == 1 && !Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, groundLayer))
+        // {
+        //      player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+        //      isTouchingWall=true;
+        // }
+        //  else if (moveInput == -1 && !Physics2D.Raycast(transform.position, Vector2.left, wallCheckDistance, groundLayer))
+        // {
+        //     player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+        //     isTouchingWall =true;
+        // }
+        // else
+        // { player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+        //     isTouchingWall =false;
+        // }
 
         //Jumping
-        if (jBufferCounter >0 )
+        if (jBufferCounter >0 && !Input.GetKey(KeyCode.S) )
         {
             if (grounded || jCoyoteCounter>0 )
             {
@@ -162,6 +183,8 @@ public class Controls : MonoBehaviour
         }
         else player.gravityScale = gravScaleDown;
     }
+
+    
 
 
 

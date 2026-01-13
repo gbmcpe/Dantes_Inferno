@@ -13,6 +13,8 @@ public class CameraControls : MonoBehaviour
 
     [SerializeField] private float PanDistance;
 
+    private float PanSpeedCounter;
+
     private bool IsPanning = false;
 
     private bool PanReturn = false;
@@ -23,64 +25,79 @@ public class CameraControls : MonoBehaviour
 
     private void FixedUpdate()
     {
-        
+
         Vector3 TargetPosition = target.position + offset;
         TargetPosition.z = transform.position.z;
-
         
+        if (Input.GetKey(KeyCode.LeftArrow)
+         || Input.GetKey(KeyCode.UpArrow)
+         || Input.GetKey(KeyCode.DownArrow)
+         || Input.GetKey(KeyCode.RightArrow))
+        {
+            PanSpeedCounter = 0;
+            IsPanning = true;
+            PanReturn = false;
+        }
 
-        //Look Up
-        if (Input.GetKey(KeyCode.UpArrow))
+        if (Input.GetKey(KeyCode.UpArrow) && Input.GetKey(KeyCode.RightArrow))
         {
             TargetPosition.y += PanDistance * 0.5f;
-            IsPanning = true;
-            PanReturn = false;
+            TargetPosition.x += PanDistance;
             SmoothCam(TargetPosition, true);
         }
-
-        //Look Down
-        if (Input.GetKey(KeyCode.DownArrow))
+        else if (Input.GetKey(KeyCode.RightArrow) && Input.GetKey(KeyCode.DownArrow))
         {
-            TargetPosition.y -= PanDistance*0.5f;
-            IsPanning = true;
-            PanReturn = false;
+            TargetPosition.y -= PanDistance * 0.5f;
+            TargetPosition.x += PanDistance;
             SmoothCam(TargetPosition, true);
         }
-
-        //Look Left
-        if (Input.GetKey(KeyCode.LeftArrow))
+        else if (Input.GetKey(KeyCode.DownArrow) && Input.GetKey(KeyCode.LeftArrow))
         {
+            TargetPosition.y -= PanDistance * 0.5f;
             TargetPosition.x -= PanDistance;
-            IsPanning = true;
-            PanReturn = false;
             SmoothCam(TargetPosition, true);
         }
+        else if (Input.GetKey(KeyCode.LeftArrow) && Input.GetKey(KeyCode.UpArrow))
+        {
+            TargetPosition.y += PanDistance * 0.5f;
+            TargetPosition.x -= PanDistance;
+            SmoothCam(TargetPosition, true);
+        }
+        else if (Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.DownArrow))
+        {
+            TargetPosition.y += PanDistance * 0.5f;
+            SmoothCam(TargetPosition, true);
 
-        //Look Right
-        if (Input.GetKey(KeyCode.RightArrow))
+        }
+        else if (Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.LeftArrow))
         {
             TargetPosition.x += PanDistance;
-            IsPanning = true;
-            PanReturn = false;
             SmoothCam(TargetPosition, true);
         }
-
-        if (Input.anyKeyDown == false && IsPanning == true)
+        else if (Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow) && !Input.GetKey(KeyCode.UpArrow))
         {
-            PanReturn = true;
+            TargetPosition.y -= PanDistance * 0.5f;
+            SmoothCam(TargetPosition, true);
         }
-        
+        else if (Input.GetKey(KeyCode.LeftArrow) && !Input.GetKey(KeyCode.UpArrow) && !Input.GetKey(KeyCode.DownArrow) && !Input.GetKey(KeyCode.RightArrow))
+        {
+            TargetPosition.x -= PanDistance;
+            SmoothCam(TargetPosition, true);
+        }
+        else if (!Input.GetKey(KeyCode.LeftArrow)
+         && !Input.GetKey(KeyCode.UpArrow)
+         && !Input.GetKey(KeyCode.DownArrow)
+         && !Input.GetKey(KeyCode.RightArrow) && IsPanning == true && transform.position != TargetPosition)
+        {
+            IsPanning = false;
+            PanSpeedCounter += 1;
+            PanReturn = true;
 
-        //case where the camera has been panned and needs to be returned to player
-            if (PanReturn == true && transform.position != TargetPosition)
-            {
-                SmoothCam(TargetPosition, true);
+            SmoothCam(TargetPosition, true);
 
-                print("Camera Returning!");
-            }
-
-        //case for Panning State when it finishes returning to the player
-        if (PanReturn == true && Vector3.Distance(transform.position, TargetPosition) < 0.1)
+            print("Camera Returning!");
+        }
+        else if (PanReturn == true && Vector3.Distance(transform.position, TargetPosition) < 0.1)
         {
             IsPanning = false;
             PanReturn = false;
@@ -89,19 +106,21 @@ public class CameraControls : MonoBehaviour
         }
 
         //case for normal camera state; no panning
-        if (IsPanning == false) { SmoothCam(TargetPosition, false); }
+        else if (IsPanning == false) { SmoothCam(TargetPosition, false); }
     }
+
+
 
     private void SmoothCam(Vector3 TargetPosition, bool Pan)
     {
-    
+
         if (Pan == true)
         {
-        transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, PanDamping);
+            transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, PanDamping-(PanSpeedCounter*0.01f));
         }
         else
         {
-         transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, Damping);
+            transform.position = Vector3.SmoothDamp(transform.position, TargetPosition, ref Velocity, Damping);
         }
 
     }
