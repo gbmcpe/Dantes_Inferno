@@ -3,10 +3,6 @@ using UnityEngine;
 public class Interactor : MonoBehaviour
 {
 
-    interface IInteractable
-    {
-        public void Interact();
-    }
 
     public float InteractRange;
     public LayerMask InteractableLayer;
@@ -30,7 +26,8 @@ public class Interactor : MonoBehaviour
 
             if (iObj.gameObject.TryGetComponent(out IInteractable interactobj))
             {
-                interactobj.Interact();
+                print("if statement fired" + interactobj.ToString());
+                interactobj.Interact(this);
             }
         }
         

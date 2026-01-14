@@ -1,43 +1,19 @@
 using UnityEngine;
 
-public class Button : MonoBehaviour
+public class Button : MonoBehaviour, IInteractable
 {
+    public bool CanInteract;
 
-    interface IInteractable
-    {
-        public void Interact();
-    }
-    public bool activation;
+    public bool Activated;
+
 
     public GameObject output1;
-    public GameObject output2;
-    public GameObject output3;
-    public GameObject output4;
+
 
 
     void Start()
     {
-
-        ColorUpdate(activation);
-
-    }
-
-
-    public void Interact()
-    {
-        activation = !activation;
-
-        if (activation == true)
-        {
-            transform.GetComponent<SpriteRenderer>().color = new Color(0, 1, 0);
-
-        }
-        else
-        {
-            transform.GetComponent<SpriteRenderer>().color = new Color(1, 0, 0);
-
-        }
-
+        ColorUpdate(Activated);
     }
 
 
@@ -47,5 +23,40 @@ public class Button : MonoBehaviour
         else { transform.GetComponent<SpriteRenderer>().color = new Color(1, 0, 0); }
     }
 
+    bool IInteractable.CanInteract()
+    {
+        throw new System.NotImplementedException();
+    }
 
+    void IInteractable.Activate()
+    {
+       
+throw new System.NotImplementedException();
+     
+    }
+
+    void IInteractable.Interact(Interactor interactor)
+    {
+        print("Interaction Activated");
+
+        Activated = !Activated;
+
+        if (Activated == true)
+        {
+            transform.GetComponent<SpriteRenderer>().color = new Color(0, 1, 0);
+
+
+        }
+        else
+        {
+            transform.GetComponent<SpriteRenderer>().color = new Color(1, 0, 0);
+
+
+        }
+
+        IInteractable outputinter = output1.GetComponent<IInteractable>();
+
+        outputinter.Activate();
+
+    }
 }

@@ -101,7 +101,8 @@ public class Controls : MonoBehaviour
         player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
         }
 
-        
+        //commented out different system for wallcheck and trying to fix a bug I found a better way to fix
+
         // if (moveInput == 1 && !Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, groundLayer))
         // {
         //      player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
@@ -118,14 +119,15 @@ public class Controls : MonoBehaviour
         // }
 
         //Jumping
-        if (jBufferCounter >0 && !Input.GetKey(KeyCode.S) )
+
+        if (jBufferCounter > 0 && !Input.GetKey(KeyCode.S))
         {
-            if (grounded || jCoyoteCounter>0 )
+            if (grounded || jCoyoteCounter > 0)
             {
-            player.linearVelocity = new Vector2(player.linearVelocity.x, vPressSpeed);
-            jCoyoteCounter = 0;
-            jBufferCounter = 0;
-            grounded= false;
+                player.linearVelocity = new Vector2(player.linearVelocity.x, vPressSpeed);
+                jCoyoteCounter = 0;
+                jBufferCounter = 0;
+                grounded = false;
             }
         }
                     if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0)
