@@ -24,7 +24,7 @@ public class Interactor : MonoBehaviour
 
             Collider2D iObj = Physics2D.OverlapCircle(transform.position, InteractRange, InteractableLayer);
 
-            if (iObj.gameObject.TryGetComponent(out IInteractable interactobj))
+            if (iObj.gameObject.TryGetComponent(out IInteractable interactobj) && interactobj.CanInteract() == true)
             {
                 print("if statement fired" + interactobj.ToString());
                 interactobj.Interact(this);

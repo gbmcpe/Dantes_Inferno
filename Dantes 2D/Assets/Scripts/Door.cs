@@ -1,4 +1,6 @@
+using UnityEditor.ShortcutManagement;
 using UnityEngine;
+using UnityEngine.Timeline;
 
 public class Door : MonoBehaviour, IInteractable
 {
@@ -45,7 +47,7 @@ public class Door : MonoBehaviour, IInteractable
         }
     }
 
-    void IInteractable.Activate()
+    void IInteractable.Activate(int ActivData = 0)
     {
         Activation = !Activation;
         DoorState();

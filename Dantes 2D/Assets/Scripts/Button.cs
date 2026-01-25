@@ -6,6 +6,7 @@ public class Button : MonoBehaviour, IInteractable
 
     public bool Activated;
 
+    [SerializeField] private int ActivData;
 
     public GameObject output1;
 
@@ -25,10 +26,10 @@ public class Button : MonoBehaviour, IInteractable
 
     bool IInteractable.CanInteract()
     {
-        throw new System.NotImplementedException();
+        return true;
     }
 
-    void IInteractable.Activate()
+    void IInteractable.Activate(int i = 0)
     {
        
 throw new System.NotImplementedException();
@@ -56,7 +57,7 @@ throw new System.NotImplementedException();
 
         IInteractable outputinter = output1.GetComponent<IInteractable>();
 
-        outputinter.Activate();
+        outputinter.Activate(ActivData);
 
     }
 }
