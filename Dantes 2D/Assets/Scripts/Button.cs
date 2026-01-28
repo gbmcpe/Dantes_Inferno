@@ -32,7 +32,7 @@ public class Button : MonoBehaviour, IInteractable
     void IInteractable.Activate(int i = 0)
     {
        
-throw new System.NotImplementedException();
+        throw new System.NotImplementedException();
      
     }
 
