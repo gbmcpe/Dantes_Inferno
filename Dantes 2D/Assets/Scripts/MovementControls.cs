@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
-public class Controls : MonoBehaviour
+public class MovementControls : MonoBehaviour
 {
 
     #region Variables
@@ -32,6 +32,7 @@ public class Controls : MonoBehaviour
 
     public Transform groundCheck;
      public LayerMask groundLayer;
+     public LayerMask movingGroundLayer;
     private Rigidbody2D player;
     private SpriteRenderer spriteRenderer;
 
@@ -40,6 +41,7 @@ public class Controls : MonoBehaviour
     private bool isTouchingWall;
     //private bool isWallSliding = false;
     private bool crouching;
+    private bool isOnMovingGround;
 
     
     private float jBufferCounter;
@@ -138,7 +140,20 @@ public class Controls : MonoBehaviour
     }
 
     private void CheckGrounded()
-    { grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer); }
+    { grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer); 
+
+    //Additional Check to deal with moving platforms properly
+     if(Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer))
+     {
+        Collider2D Platform = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer);
+        
+        transform.SetParent(Platform.gameObject.transform, true);
+        }
+        else if (grounded)
+        {
+        transform.SetParent(null, true);
+        }
+    }
 
 
 //currently only seems to detect hitting the right of a wall
