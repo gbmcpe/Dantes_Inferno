@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.IO;
 using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
@@ -14,36 +15,63 @@ public class MovementControls : MonoBehaviour
 
 
   
-
+//HSpeed: speed for moving horizontally
     [SerializeField] private float hSpeed;
+//VPress: amount of force initially given when jumping
     [SerializeField] private float vPressSpeed;
+//VHold: amount of force continually given while holding space
     [SerializeField] private float vHoldSpeed;
+//WSpeed: downward speed while wallsliding
     [SerializeField] private float wSpeed;
+//CSpeed: unused variable I think for when crouching?
     [SerializeField] private float cSpeed;
+//Gravity applied when moving up
     [SerializeField] private float gravScaleUp;
+//Gravity applied when moving down
     [SerializeField] private float gravScaleDown;
 
+//Amount of seconds the player has to hit space early and still jump when hitting ground
     [SerializeField] private float jBufferTime = 0.15f;
+//Amount of seconds the player has to hit space after leaving a platform where they can still jump
      [SerializeField] private float jCoyoteTime = 0.2f;
 
+      [SerializeField] private float disableTime;
+
+//Radius the player checks from groundCheck to determine if there is ground beneath the player
     public float groundCheckRadius = 0.2f;
 
+//Radius the player checks to see if there are walls around them
     public float wallCheckDistance = 1f;
 
+//The point childed to the Player Object that is used as the origin for ground checking
     public Transform groundCheck;
+
+//The layer where all Ground Objects reside
      public LayerMask groundLayer;
+//The layer for Moving Platforms and Elevators so that the game childs the player to them to inherit momentum
      public LayerMask movingGroundLayer;
+//The Player Object
     private Rigidbody2D player;
+//The Player's Sprite
     private SpriteRenderer spriteRenderer;
 
+    private BoxCollider2D playerCollider;
+
+//Counter variable for Coyote Time
     private float jCoyoteCounter;
+
+//Bool tracking if the player is touching the floor and can jump again
     private bool grounded;
+//Bool tracking if the player is touching one of their sides on a wall
     private bool isTouchingWall;
     //private bool isWallSliding = false;
-    private bool crouching;
+//Bool tracking the crouching state of the player
+    private bool isCrouching;
+//Bool tracking if the player is on a moving platform or elevator
     private bool isOnMovingGround;
-
-    
+    //
+    private bool isOnPlatform;
+//Counter for Jump Buffering    
     private float jBufferCounter;
     #endregion
 
@@ -53,6 +81,7 @@ public class MovementControls : MonoBehaviour
     {
         player = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        playerCollider = GetComponent<BoxCollider2D>();
     }
 
     // Update is called once per frame
@@ -62,14 +91,14 @@ public class MovementControls : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            transform.position += new Vector3(0, -0.25f, 0);
-            transform.localScale = new Vector2(1, 0.5f);
-            crouching = true;
+            transform.position += new Vector3(0, -0.5f);
+            transform.localScale = new Vector2(0.8f, 1f);
+            isCrouching = true;
         }
         else if (Input.GetKeyUp(KeyCode.S))
         {
-        transform.position += new Vector3(0, 0.25f, 0);
-        gameObject.transform.localScale = new Vector3(1f, 1f, 0); crouching = false;
+        transform.position += new Vector3(0, 0.5f);
+        gameObject.transform.localScale = new Vector2(0.8f, 2f); isCrouching = false;
         }
     
         CoyoteTimer();
@@ -79,6 +108,7 @@ public class MovementControls : MonoBehaviour
          if (isTouchingWall == true)
         { print("touchingwall"); }
        HandleWallSliding(moveInput);
+       Drop();
 
     }
 
@@ -140,19 +170,57 @@ public class MovementControls : MonoBehaviour
     }
 
     private void CheckGrounded()
-    { grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer); 
+    {
 
-    //Additional Check to deal with moving platforms properly
-     if(Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer))
-     {
-        Collider2D Platform = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer);
-        
-        transform.SetParent(Platform.gameObject.transform, true);
-        }
-        else if (grounded)
+        Collider2D Ground = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+
+        if (Ground != null)
         {
-        transform.SetParent(null, true);
+            grounded = true;
+
+            if (Ground.gameObject.tag == "Moving")
+            {
+                print("movingground");
+                isOnMovingGround = true;
+                transform.SetParent(Ground.gameObject.transform, true);
+
+            }
+            else if (Ground.gameObject.tag == "Platform")
+            {
+                print("platform");
+                isOnMovingGround = false;
+                isOnPlatform = true;
+                transform.SetParent(null, true);
+            }
+            else
+            {
+                isOnMovingGround = false;
+                isOnPlatform = false;
+                transform.SetParent(null, true);
+            }
+
+
+
         }
+        else if (Ground == null)
+        { grounded = false; }
+        
+        
+
+    //     grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer); 
+
+    // //Additional Check to deal with moving platforms properly
+    //  if(Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer))
+    //  {
+    //     Collider2D Platform = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer);
+        
+    //     transform.SetParent(Platform.gameObject.transform, true);
+    //     }
+    //     else if (grounded)
+    //     {
+    //     transform.SetParent(null, true);
+    //     }
+
     }
 
 
@@ -201,17 +269,31 @@ public class MovementControls : MonoBehaviour
         else player.gravityScale = gravScaleDown;
     }
 
-    
+
 
 
 
     //Interact Button
-    private void Interact()
+    private void Drop()
     {
-
+        if (isCrouching == true && isOnPlatform && grounded && Input.GetKeyDown(KeyCode.Space)&& playerCollider.enabled)
+        {
+            StartCoroutine(DisablePlayerCollider(disableTime));
+        }
     }
 
 
+    #endregion
+
+    #region Value-Returning
+
+    private IEnumerator DisablePlayerCollider(float disableT)
+    {
+        playerCollider.enabled = false;
+        yield return new WaitForSeconds(disableT);
+        playerCollider.enabled = true;
+    }
+    
     #endregion
 
     #region collisions / triggers
@@ -246,6 +328,7 @@ public class MovementControls : MonoBehaviour
         }
 
     }
+
 
 
 
