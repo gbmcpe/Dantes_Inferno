@@ -6,6 +6,10 @@ public class Button : MonoBehaviour, IInteractable
 
     public bool Activated;
 
+    public bool Timed;
+
+    public int timeTimed;
+
     [SerializeField] private int ActivData;
 
     public GameObject output1;

@@ -91,14 +91,14 @@ public class MovementControls : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            transform.position += new Vector3(0, -0.5f);
-            transform.localScale = new Vector2(0.8f, 1f);
+            transform.position += new Vector3(0, -0.45f);
+            transform.localScale = new Vector2(0.8f, 0.9f);
             isCrouching = true;
         }
         else if (Input.GetKeyUp(KeyCode.S))
         {
-        transform.position += new Vector3(0, 0.5f);
-        gameObject.transform.localScale = new Vector2(0.8f, 2f); isCrouching = false;
+        transform.position += new Vector3(0, 0.45f);
+        gameObject.transform.localScale = new Vector2(0.8f, 1.8f); isCrouching = false;
         }
     
         CoyoteTimer();
