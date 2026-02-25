@@ -48,8 +48,8 @@ public class MovementControls : MonoBehaviour
 
 //The layer where all Ground Objects reside
      public LayerMask groundLayer;
-//The layer for Moving Platforms and Elevators so that the game childs the player to them to inherit momentum
-     public LayerMask movingGroundLayer;
+     
+
 //The Player Object
     private Rigidbody2D player;
 //The Player's Sprite
@@ -176,7 +176,7 @@ public class MovementControls : MonoBehaviour
 
         if (Ground != null)
         {
-            grounded = true;
+            
 
             if (Ground.gameObject.tag == "Moving")
             {
@@ -184,19 +184,25 @@ public class MovementControls : MonoBehaviour
                 isOnMovingGround = true;
                 transform.SetParent(Ground.gameObject.transform, true);
 
+                grounded = true;
+
             }
-            else if (Ground.gameObject.tag == "Platform")
+            else if (Ground.gameObject.tag == "Platform" && groundCheck.position.y > Ground.transform.position.y)
             {
                 print("platform");
                 isOnMovingGround = false;
                 isOnPlatform = true;
                 transform.SetParent(null, true);
+
+                grounded = true;
             }
             else
             {
                 isOnMovingGround = false;
                 isOnPlatform = false;
                 transform.SetParent(null, true);
+
+                grounded = true;
             }
 
 
