@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5812603561777508640}
   - component: {fileID: 4496809939890410274}
-  - component: {fileID: 3860194637083737906}
+  - component: {fileID: -4991442998420973554}
   m_Layer: 0
   m_Name: Turret
   m_TagString: Untagged
@@ -32,6 +32,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 567745870925017597}
+  - {fileID: 4443258005370410536}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &4496809939890410274
@@ -89,7 +90,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &3860194637083737906
+--- !u!114 &-4991442998420973554
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,8 +102,53 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ecfde95374c2f764889aa5580b4be436, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bullet: {fileID: 2902649891402094432, guid: 1250150a7a1c29c4385f4b6017103d68, type: 3}
-  bulletSpawn: {fileID: 567745870925017597}
+  CanMove: 0
+  MoveSpeed: 0
+  AimToShoot: 0
+  SummonedObject: {fileID: 2902649891402094432, guid: 1250150a7a1c29c4385f4b6017103d68, type: 3}
+  MeleeObject: {fileID: 0}
+  SummonLocation: {fileID: 567745870925017597}
+  MeleeLocation: {fileID: 4443258005370410536}
+  MaxHp: 4
+  currentHp: 0
+  CanShoot: 1
+  FireDelay: 2
+  GunDistance: 20
+  BulletTotal: 5
+  CanMelee: 0
+  MeleeDelay: 0
+  MeleeDistance: 0
+--- !u!1 &4146464046237296729
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4443258005370410536}
+  m_Layer: 0
+  m_Name: MeleeSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4443258005370410536
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4146464046237296729}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.849, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5812603561777508640}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8853621554228193695
 GameObject:
   m_ObjectHideFlags: 0

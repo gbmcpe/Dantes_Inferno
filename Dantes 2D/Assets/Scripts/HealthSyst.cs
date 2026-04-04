@@ -9,7 +9,7 @@ using TMPro;
 public class Health : MonoBehaviour
 {
     public int health; // hp value
-    public int maxHP = 10;  // Max hp
+    public int maxHP;  // Max hp
     public bool invuln = false;  // Indicates if the player is currently invulnerable
    
     
@@ -36,8 +36,10 @@ public class Health : MonoBehaviour
                 // Info for death, decide later
 
             }
-            
-            //  Have damage apply to hp here
+            if (health > maxHP)
+            {
+                health = maxHP;  // Prevents overheal
+            }
         }
     }
     IEnumerator Invulntime()

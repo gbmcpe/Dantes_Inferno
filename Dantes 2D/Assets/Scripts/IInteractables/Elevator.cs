@@ -49,7 +49,7 @@ public class Elevator : MonoBehaviour, IInteractable
 
 
 
-    void Update()
+    void FixedUpdate()
     {
 
 

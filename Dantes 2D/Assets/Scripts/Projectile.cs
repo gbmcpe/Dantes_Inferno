@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TurretBulletScript : MonoBehaviour
+public class Projectile : MonoBehaviour
 {
     private GameObject target;
     private Rigidbody2D rb;
     public float speed;
     private float decay;
-
+    public int damage;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -37,7 +37,7 @@ public class TurretBulletScript : MonoBehaviour
     {
         if(other.gameObject.tag == "Player")
         {
-            other.gameObject.GetComponent<Health>().TakeDamage(1);
+            other.gameObject.GetComponent<Health>().TakeDamage(damage);
             Destroy(gameObject);
         }
         if(other.gameObject.tag == "Wall")
