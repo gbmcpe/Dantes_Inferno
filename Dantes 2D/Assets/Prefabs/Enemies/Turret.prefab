@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5812603561777508640}
   - component: {fileID: 4496809939890410274}
   - component: {fileID: -4991442998420973554}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Turret
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -127,7 +127,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4443258005370410536}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: MeleeSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -158,7 +158,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 567745870925017597}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: BulletSpawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
