@@ -37590,11 +37590,19 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5341104089413519289, guid: 438a6cd4ecb08a54789aef9a5a4521b4, type: 3}
+      propertyPath: jHoldSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5341104089413519289, guid: 438a6cd4ecb08a54789aef9a5a4521b4, type: 3}
       propertyPath: disableTime
       value: 0.35
       objectReference: {fileID: 0}
     - target: {fileID: 5341104089413519289, guid: 438a6cd4ecb08a54789aef9a5a4521b4, type: 3}
       propertyPath: gravScaleUp
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5341104089413519289, guid: 438a6cd4ecb08a54789aef9a5a4521b4, type: 3}
+      propertyPath: jPressSpeed
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5341104089413519289, guid: 438a6cd4ecb08a54789aef9a5a4521b4, type: 3}
@@ -38684,15 +38692,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hSpeed: 10
-  vPressSpeed: 0
-  vHoldSpeed: 0
   wSpeed: 0
   cSpeed: 0
+  cDisableTime: 0
+  jPressSpeed: 0
+  jHoldSpeed: 0
   gravScaleUp: 0
   gravScaleDown: 0
   jBufferTime: 0.15
   jCoyoteTime: 0.2
-  disableTime: 0.5
+  jCooldownTime: 0.5
   groundCheckRadius: 0.2
   wallCheckDistance: 1
   groundCheck: {fileID: 0}

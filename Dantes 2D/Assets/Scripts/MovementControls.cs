@@ -15,50 +15,62 @@ public class MovementControls : MonoBehaviour
 
 
   
+/// <summary>
+/// MOVING VARIABLES
+/// </summary>
+
 //HSpeed: speed for moving horizontally
     [SerializeField] private float hSpeed;
-//VPress: amount of force initially given when jumping
-    [SerializeField] private float vPressSpeed;
-//VHold: amount of force continually given while holding space
-    [SerializeField] private float vHoldSpeed;
+
 //WSpeed: downward speed while wallsliding
     [SerializeField] private float wSpeed;
+
 //CSpeed: unused variable I think for when crouching?
     [SerializeField] private float cSpeed;
+
+    //The amount of time the player passes through platforms for while crouching
+    [SerializeField] private float cDisableTime;
+
+
+/// <summary>
+/// JUMPING VARIABLES 
+/// </summary>
+
+//jPress: amount of force initially given when jumping
+    [SerializeField] private float jPressSpeed;
+//jHold: amount of force continually given while holding space
+    [SerializeField] private float jHoldSpeed;
 //Gravity applied when moving up
     [SerializeField] private float gravScaleUp;
 //Gravity applied when moving down
     [SerializeField] private float gravScaleDown;
-
 //Amount of seconds the player has to hit space early and still jump when hitting ground
     [SerializeField] private float jBufferTime = 0.15f;
+        //Counter for Jump Buffering    
+        private float jBufferCounter;
 //Amount of seconds the player has to hit space after leaving a platform where they can still jump
-     [SerializeField] private float jCoyoteTime = 0.2f;
+    [SerializeField] private float jCoyoteTime = 0.2f;
+        //Counter variable for Coyote Time
+        private float jCoyoteCounter;
+//Amount of seconds the player has to wait before starting a new jump
+    [SerializeField] private float jCooldownTime;
+        //Counter variable for jump cooldown    
+        private float jCooldownTimeCounter;
 
-      [SerializeField] private float disableTime;
+
+/// <summary>
+/// SENTINEL VARIABLES
+/// </summary>
 
 //Radius the player checks from groundCheck to determine if there is ground beneath the player
     public float groundCheckRadius = 0.2f;
-
 //Radius the player checks to see if there are walls around them
     public float wallCheckDistance = 1f;
-
 //The point childed to the Player Object that is used as the origin for ground checking
     public Transform groundCheck;
-
 //The layer where all Ground Objects reside
      public LayerMask groundLayer;
-     
 
-//The Player Object
-    private Rigidbody2D player;
-//The Player's Sprite
-    private SpriteRenderer spriteRenderer;
-
-    private BoxCollider2D playerCollider;
-
-//Counter variable for Coyote Time
-    private float jCoyoteCounter;
 
 //Bool tracking if the player is touching the floor and can jump again
     private bool grounded;
@@ -69,10 +81,22 @@ public class MovementControls : MonoBehaviour
     private bool isCrouching;
 //Bool tracking if the player is on a moving platform or elevator
     private bool isOnMovingGround;
-    //
+//Bool tracking if the player is on a platform
     private bool isOnPlatform;
-//Counter for Jump Buffering    
-    private float jBufferCounter;
+
+
+/// <summary>
+/// SELF VARIABLES
+/// </summary>
+
+//The Player Object
+    private Rigidbody2D player;
+//The Player's Sprite
+    private SpriteRenderer spriteRenderer;
+
+    private BoxCollider2D playerCollider;
+
+
     #endregion
 
     #region Awake, Start, Update
@@ -108,6 +132,7 @@ public class MovementControls : MonoBehaviour
          if (isTouchingWall == true)
         { print("touchingwall"); }
        HandleWallSliding(moveInput);
+
        Drop();
 
     }
@@ -133,30 +158,16 @@ public class MovementControls : MonoBehaviour
         player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
         }
 
-        //commented out different system for wallcheck and trying to fix a bug I found a better way to fix
-
-        // if (moveInput == 1 && !Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, groundLayer))
-        // {
-        //      player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
-        //      isTouchingWall=true;
-        // }
-        //  else if (moveInput == -1 && !Physics2D.Raycast(transform.position, Vector2.left, wallCheckDistance, groundLayer))
-        // {
-        //     player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
-        //     isTouchingWall =true;
-        // }
-        // else
-        // { player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
-        //     isTouchingWall =false;
-        // }
-
         //Jumping
-
+        //If the jumpbuffer timer is over and you are not holding s (dropdown)
         if (jBufferCounter > 0 && !Input.GetKey(KeyCode.S))
         {
+            //If you are grounded or the coyote timer hasn't expired you can jump
             if (grounded || jCoyoteCounter > 0)
             {
-                player.linearVelocity = new Vector2(player.linearVelocity.x, vPressSpeed);
+                if (grounded) {print("Jumped from Grounded");}
+                else if (!grounded && jCoyoteCounter > 0) {print("Jumped from Coyote Time");}
+                player.linearVelocity = new Vector2(player.linearVelocity.x, jPressSpeed);
                 jCoyoteCounter = 0;
                 jBufferCounter = 0;
                 grounded = false;
@@ -164,7 +175,7 @@ public class MovementControls : MonoBehaviour
         }
                     if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0)
         {
-            player.AddForceY(vHoldSpeed);
+            player.AddForceY(jHoldSpeed);
 
         }
     }
@@ -284,7 +295,7 @@ public class MovementControls : MonoBehaviour
     {
         if (isCrouching == true && isOnPlatform && grounded && Input.GetKeyDown(KeyCode.Space)&& playerCollider.enabled)
         {
-            StartCoroutine(DisablePlayerCollider(disableTime));
+            StartCoroutine(DisablePlayerCollider(cDisableTime));
         }
     }
 
