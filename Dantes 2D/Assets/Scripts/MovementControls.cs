@@ -12,12 +12,11 @@ public class MovementControls : MonoBehaviour
 {
 
     #region Variables
-
-
   
 /// <summary>
 /// MOVING VARIABLES
 /// </summary>
+[Header("Movement")]
 
 //HSpeed: speed for moving horizontally
     [SerializeField] private float hSpeed;
@@ -35,6 +34,7 @@ public class MovementControls : MonoBehaviour
 /// <summary>
 /// JUMPING VARIABLES 
 /// </summary>
+[Header("Jumping")]
 
 //jPress: amount of force initially given when jumping
     [SerializeField] private float jPressSpeed;
@@ -61,6 +61,7 @@ public class MovementControls : MonoBehaviour
 /// <summary>
 /// SENTINEL VARIABLES
 /// </summary>
+[Header("World")]
 
 //Radius the player checks from groundCheck to determine if there is ground beneath the player
     public float groundCheckRadius = 0.2f;
@@ -83,6 +84,7 @@ public class MovementControls : MonoBehaviour
     private bool isOnMovingGround;
 //Bool tracking if the player is on a platform
     private bool isOnPlatform;
+    private bool SpaceDisable;
 
 
 /// <summary>
@@ -112,29 +114,19 @@ public class MovementControls : MonoBehaviour
     private void Update()
     {
         float moveInput = Input.GetAxis("Horizontal");
-
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            transform.position += new Vector3(0, -0.45f);
-            transform.localScale = new Vector2(0.8f, 0.9f);
-            isCrouching = true;
-        }
-        else if (Input.GetKeyUp(KeyCode.S))
-        {
-        transform.position += new Vector3(0, 0.45f);
-        gameObject.transform.localScale = new Vector2(0.8f, 1.8f); isCrouching = false;
-        }
     
         CoyoteTimer();
         JumpBufferer();
-        GravityScaler();
+        JumpCooldownTimer();
+        ToggleCrouch();
         pMovement(moveInput);
+        HandleWallSliding(moveInput);
+        GravityScaler();
+        Drop();
+        
+
          if (isTouchingWall == true)
         { print("touchingwall"); }
-       HandleWallSliding(moveInput);
-
-       Drop();
-
     }
 
     private void FixedUpdate()
@@ -146,40 +138,67 @@ public class MovementControls : MonoBehaviour
     #endregion
 
     #region Voids
-
+  
     //Player Movement Method
     private void pMovement(float moveInput)
     {
+        pStrafing(moveInput);
+        pJump();
+    }
 
-
-    //Strafing
+    private void pStrafing(float moveInput)
+    {
         if (!Input.GetKey(KeyCode.S))
-        {
-        player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
-        }
-
-        //Jumping
-        //If the jumpbuffer timer is over and you are not holding s (dropdown)
-        if (jBufferCounter > 0 && !Input.GetKey(KeyCode.S))
-        {
-            //If you are grounded or the coyote timer hasn't expired you can jump
-            if (grounded || jCoyoteCounter > 0)
             {
-                if (grounded) {print("Jumped from Grounded");}
-                else if (!grounded && jCoyoteCounter > 0) {print("Jumped from Coyote Time");}
+                player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+            }    
+    }
+
+    private void pJump()
+    {
+        //Initial Press
+        //If the jumpbuffer timer is over and you are not holding s (dropdown)
+        //If you are grounded or the coyote timer hasn't expired you can jump
+        if (jBufferCounter > 0 
+            && !Input.GetKey(KeyCode.S)
+            && (grounded || jCoyoteCounter > 0)
+            && jCooldownTimeCounter <= 0)
+        {
+            
+                //if (grounded) {print("Jumped from Grounded");}
+                //else if (!grounded && jCoyoteCounter > 0) {print("Jumped from Coyote Time");}
                 player.linearVelocity = new Vector2(player.linearVelocity.x, jPressSpeed);
                 jCoyoteCounter = 0;
                 jBufferCounter = 0;
+                jCooldownTimeCounter = jCooldownTime;
+                SpaceDisable = false;
                 grounded = false;
-            }
         }
-                    if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0)
+
+        if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0 && !SpaceDisable)
         {
             player.AddForceY(jHoldSpeed);
 
         }
+        else{SpaceDisable = true;}
+    
     }
 
+    private void ToggleCrouch()
+    {        
+        if (Input.GetKeyDown(KeyCode.S))
+            {
+                transform.position += new Vector3(0, -0.45f);
+                transform.localScale = new Vector2(0.8f, 0.9f);
+                isCrouching = true;
+            }
+            else if (Input.GetKeyUp(KeyCode.S))
+            {
+            transform.position += new Vector3(0, 0.45f);
+            gameObject.transform.localScale = new Vector2(0.8f, 1.8f); isCrouching = false;
+            }
+    }
+    
     private void CheckGrounded()
     {
 
@@ -196,7 +215,6 @@ public class MovementControls : MonoBehaviour
                 transform.SetParent(Ground.gameObject.transform, true);
 
                 grounded = true;
-
             }
             else if (Ground.gameObject.tag == "Platform" && groundCheck.position.y > Ground.transform.position.y)
             {
@@ -215,28 +233,9 @@ public class MovementControls : MonoBehaviour
 
                 grounded = true;
             }
-
-
-
         }
         else if (Ground == null)
         { grounded = false; }
-        
-        
-
-    //     grounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer); 
-
-    // //Additional Check to deal with moving platforms properly
-    //  if(Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer))
-    //  {
-    //     Collider2D Platform = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, movingGroundLayer);
-        
-    //     transform.SetParent(Platform.gameObject.transform, true);
-    //     }
-    //     else if (grounded)
-    //     {
-    //     transform.SetParent(null, true);
-    //     }
 
     }
 
@@ -269,6 +268,12 @@ public class MovementControls : MonoBehaviour
         { jCoyoteCounter -= Time.deltaTime; }
     }
 
+    private void JumpCooldownTimer()
+    {
+        if(jCooldownTimeCounter >0)
+        {jCooldownTimeCounter -= Time.deltaTime;}
+    }
+
     private void JumpBufferer()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -286,10 +291,6 @@ public class MovementControls : MonoBehaviour
         else player.gravityScale = gravScaleDown;
     }
 
-
-
-
-
     //Interact Button
     private void Drop()
     {
@@ -298,7 +299,6 @@ public class MovementControls : MonoBehaviour
             StartCoroutine(DisablePlayerCollider(cDisableTime));
         }
     }
-
 
     #endregion
 
@@ -346,10 +346,6 @@ public class MovementControls : MonoBehaviour
 
     }
 
-
-
-
     #endregion
-
 
 }
