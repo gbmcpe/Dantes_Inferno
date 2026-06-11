@@ -70,8 +70,9 @@ public class MovementControls : MonoBehaviour
 //The point childed to the Player Object that is used as the origin for ground checking
     public Transform groundCheck;
 //The layer where all Ground Objects reside
-     public LayerMask groundLayer;
-
+    public LayerMask groundLayer;
+     
+    private float lastXPos;
 
 //Bool tracking if the player is touching the floor and can jump again
     private bool grounded;
@@ -97,9 +98,12 @@ public class MovementControls : MonoBehaviour
 //The Player Object
     private Rigidbody2D player;
 //The Player's Sprite
+
+[SerializeField] GameObject spriteObject;
     private SpriteRenderer spriteRenderer;
 //Player's collider
     private BoxCollider2D playerCollider;
+    private Animator animator;
 
 
     #endregion
@@ -109,8 +113,9 @@ public class MovementControls : MonoBehaviour
     private void Awake()
     {
         player = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
         playerCollider = GetComponent<BoxCollider2D>();
+        spriteRenderer = spriteObject.GetComponent<SpriteRenderer>();
+        animator = spriteObject.GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -120,7 +125,7 @@ public class MovementControls : MonoBehaviour
         
         GroundMovement(moveInput);
         
-
+        lastXPos = transform.position.x;
     }
 
     private void FixedUpdate()
@@ -138,6 +143,7 @@ public class MovementControls : MonoBehaviour
     {
         //Running
         Strafing(moveInput);
+
         //Jumping
         CoyoteTimer();
         JumpBufferer();
@@ -153,6 +159,17 @@ public class MovementControls : MonoBehaviour
 
     private void Strafing(float moveInput)
     {
+        FlipCharacter(moveInput);
+        
+        if (moveInput != 0)
+        {
+            animator.SetBool("isRunning", true);
+        }
+        else
+        {
+            animator.SetBool("isRunning", false);
+        }
+        
         if (!Input.GetKey(KeyCode.S))
             {
                 player.linearVelocity = new Vector2(moveInput * walkSpeed, player.linearVelocity.y);
@@ -307,6 +324,18 @@ public class MovementControls : MonoBehaviour
         if (isCrouching == true && isOnPlatform && grounded && Input.GetKeyDown(KeyCode.Space)&& playerCollider.enabled)
         {
             StartCoroutine(DisablePlayerCollider(crouchDisableTime));
+        }
+    }
+
+    private void FlipCharacter(float moveInput)
+    {
+        if ((moveInput > 0) && (transform.position.x > lastXPos))
+        {//We are to the right
+        spriteRenderer.flipX = true;
+        }
+        else if ((moveInput <0) && (transform.position.x <= lastXPos))
+        {//We are to the left
+            spriteRenderer.flipX =false;
         }
     }
 

@@ -10,8 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7707865605447278779}
   - component: {fileID: 7970743979800523337}
+  - component: {fileID: 7283688061367315364}
   m_Layer: 8
-  m_Name: the guy
+  m_Name: CharacterSprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26,8 +27,8 @@ Transform:
   m_GameObject: {fileID: 1701404212947826952}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.01214901, y: -0.027777778, z: 0}
-  m_LocalScale: {x: 0.25751343, y: 0.108554624, z: -2}
+  m_LocalPosition: {x: 0.10679208, y: -0.028307403, z: 0}
+  m_LocalScale: {x: 0.67066574, y: 0.28271872, z: -5.208783}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5820482759928484386}
@@ -76,17 +77,39 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: -2339256293627595903, guid: 86335d0c4416a3649b11b5ad6988c4ca, type: 3}
+  m_Sprite: {fileID: 5239959305716574188, guid: 149458618f127d343a68f2207e3d399c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 3.92, y: 3.49}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!95 &7283688061367315364
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1701404212947826952}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: d20f095b1728e9f4c832ea0f41bbb513, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1943891858090730246
 GameObject:
   m_ObjectHideFlags: 0
@@ -275,6 +298,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   isLedge: 0
+  spriteObject: {fileID: 1701404212947826952}
 --- !u!50 &4314343027293391213
 Rigidbody2D:
   serializedVersion: 5
