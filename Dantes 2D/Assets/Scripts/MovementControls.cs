@@ -18,17 +18,17 @@ public class MovementControls : MonoBehaviour
 /// </summary>
 [Header("Movement")]
 
-//HSpeed: speed for moving horizontally
-    [SerializeField] private float hSpeed;
+//walkSpeed: speed for moving horizontally
+    [SerializeField] private float walkSpeed;
 
-//WSpeed: downward speed while wallsliding
-    [SerializeField] private float wSpeed;
+//wallslideSpeed: downward speed while wallsliding
+    [SerializeField] private float wallslideSpeed;
 
-//CSpeed: unused variable I think for when crouching?
-    [SerializeField] private float cSpeed;
+//crouchSpeed: unused variable I think for when crouching?
+    [SerializeField] private float crouchSpeed;
 
     //The amount of time the player passes through platforms for while crouching
-    [SerializeField] private float cDisableTime;
+    [SerializeField] private float crouchDisableTime;
 
 
 /// <summary>
@@ -36,26 +36,26 @@ public class MovementControls : MonoBehaviour
 /// </summary>
 [Header("Jumping")]
 
-//jPress: amount of force initially given when jumping
-    [SerializeField] private float jPressSpeed;
-//jHold: amount of force continually given while holding space
-    [SerializeField] private float jHoldSpeed;
+//jumpPressSpeed: amount of force initially given when jumping
+    [SerializeField] private float jumpPressSpeed;
+//jumpHoldSpeed: amount of force continually given while holding space
+    [SerializeField] private float jumpHoldSpeed;
 //Gravity applied when moving up
     [SerializeField] private float gravScaleUp;
 //Gravity applied when moving down
     [SerializeField] private float gravScaleDown;
 //Amount of seconds the player has to hit space early and still jump when hitting ground
-    [SerializeField] private float jBufferTime = 0.15f;
+    [SerializeField] private float jumpBufferTime = 0.15f;
         //Counter for Jump Buffering    
-        private float jBufferCounter;
+        private float jumpBufferCounter;
 //Amount of seconds the player has to hit space after leaving a platform where they can still jump
-    [SerializeField] private float jCoyoteTime = 0.2f;
+    [SerializeField] private float jumpCoyoteTime = 0.2f;
         //Counter variable for Coyote Time
-        private float jCoyoteCounter;
+        private float jumpCoyoteCounter;
 //Amount of seconds the player has to wait before starting a new jump
-    [SerializeField] private float jCooldownTime;
+    [SerializeField] private float jumpCooldown;
         //Counter variable for jump cooldown    
-        private float jCooldownTimeCounter;
+        private float jumpCooldownCounter;
 
 
 /// <summary>
@@ -84,7 +84,10 @@ public class MovementControls : MonoBehaviour
     private bool isOnMovingGround;
 //Bool tracking if the player is on a platform
     private bool isOnPlatform;
-    private bool SpaceDisable;
+
+    [HideInInspector] public bool isLedge;
+//Bool tracking if the player's jump is totally disabled (like after they just jumped)
+    private bool isJumpDisable;
 
 
 /// <summary>
@@ -95,7 +98,7 @@ public class MovementControls : MonoBehaviour
     private Rigidbody2D player;
 //The Player's Sprite
     private SpriteRenderer spriteRenderer;
-
+//Player's collider
     private BoxCollider2D playerCollider;
 
 
@@ -114,19 +117,10 @@ public class MovementControls : MonoBehaviour
     private void Update()
     {
         float moveInput = Input.GetAxis("Horizontal");
-    
-        CoyoteTimer();
-        JumpBufferer();
-        JumpCooldownTimer();
-        ToggleCrouch();
-        pMovement(moveInput);
-        HandleWallSliding(moveInput);
-        GravityScaler();
-        Drop();
+        
+        GroundMovement(moveInput);
         
 
-         if (isTouchingWall == true)
-        { print("touchingwall"); }
     }
 
     private void FixedUpdate()
@@ -140,47 +134,60 @@ public class MovementControls : MonoBehaviour
     #region Voids
   
     //Player Movement Method
-    private void pMovement(float moveInput)
+    private void GroundMovement(float moveInput)
     {
-        pStrafing(moveInput);
-        pJump();
+        //Running
+        Strafing(moveInput);
+        //Jumping
+        CoyoteTimer();
+        JumpBufferer();
+        JumpCooldownTimer();
+        Jump();
+        GravityScaler();
+        //Crouching
+        ToggleCrouch();
+        Drop();
+        //Wallsliding
+        HandleWallSliding(moveInput);
     }
 
-    private void pStrafing(float moveInput)
+    private void Strafing(float moveInput)
     {
         if (!Input.GetKey(KeyCode.S))
             {
-                player.linearVelocity = new Vector2(moveInput * hSpeed, player.linearVelocity.y);
+                player.linearVelocity = new Vector2(moveInput * walkSpeed, player.linearVelocity.y);
             }    
     }
 
-    private void pJump()
+    private void Jump()
     {
         //Initial Press
-        //If the jumpbuffer timer is over and you are not holding s (dropdown)
-        //If you are grounded or the coyote timer hasn't expired you can jump
-        if (jBufferCounter > 0 
+        //If the jumpbuffer timer is over 
+        //AND you are not holding s (dropdown)
+        //AND are grounded OR the coyote timer hasn't expired 
+        //you can jump
+        if (jumpBufferCounter > 0 
             && !Input.GetKey(KeyCode.S)
-            && (grounded || jCoyoteCounter > 0)
-            && jCooldownTimeCounter <= 0)
+            && (grounded || jumpCoyoteCounter > 0)
+            && jumpCooldownCounter <= 0)
         {
-            
+                //disabled tests
                 //if (grounded) {print("Jumped from Grounded");}
                 //else if (!grounded && jCoyoteCounter > 0) {print("Jumped from Coyote Time");}
-                player.linearVelocity = new Vector2(player.linearVelocity.x, jPressSpeed);
-                jCoyoteCounter = 0;
-                jBufferCounter = 0;
-                jCooldownTimeCounter = jCooldownTime;
-                SpaceDisable = false;
+
+                player.linearVelocity = new Vector2(player.linearVelocity.x, jumpPressSpeed);
+                jumpCoyoteCounter = 0;
+                jumpBufferCounter = 0;
+                jumpCooldownCounter = jumpCooldown;
+                isJumpDisable = false;
                 grounded = false;
         }
-
-        if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0 && !SpaceDisable)
+        else if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0 && !isJumpDisable)
         {
-            player.AddForceY(jHoldSpeed);
+            player.AddForceY(jumpHoldSpeed);
 
         }
-        else{SpaceDisable = true;}
+        else{isJumpDisable = true;}
     
     }
 
@@ -242,7 +249,10 @@ public class MovementControls : MonoBehaviour
 
 //currently only seems to detect hitting the right of a wall
     private void CheckWallSliding()
-    {isTouchingWall = Physics2D.Raycast(transform.position, spriteRenderer.flipX ? Vector2.left: Vector2.right, wallCheckDistance, groundLayer);}
+    {isTouchingWall = Physics2D.Raycast(transform.position, spriteRenderer.flipX ? Vector2.left: Vector2.right, wallCheckDistance, groundLayer);
+        if (isTouchingWall == true)
+        { print("touchingwall"); }
+    }
 
  
     private void HandleWallSliding(float moveInput)
@@ -251,7 +261,7 @@ public class MovementControls : MonoBehaviour
         {
             print("Wallsliding engaged");
            // isWallSliding = true;
-            player.linearVelocityY = -wSpeed;
+            player.linearVelocityY = -wallslideSpeed;
             
         }
         else
@@ -263,23 +273,23 @@ public class MovementControls : MonoBehaviour
     private void CoyoteTimer()
     {
       if (grounded)
-        { jCoyoteCounter = jCoyoteTime; }
+        { jumpCoyoteCounter = jumpCoyoteTime; }
         else
-        { jCoyoteCounter -= Time.deltaTime; }
+        { jumpCoyoteCounter -= Time.deltaTime; }
     }
 
     private void JumpCooldownTimer()
     {
-        if(jCooldownTimeCounter >0)
-        {jCooldownTimeCounter -= Time.deltaTime;}
+        if(jumpCooldownCounter >0)
+        {jumpCooldownCounter -= Time.deltaTime;}
     }
 
     private void JumpBufferer()
     {
         if (Input.GetKeyDown(KeyCode.Space))
-        { jBufferCounter = jBufferTime; }
+        { jumpBufferCounter = jumpBufferTime; }
         else
-        { jBufferCounter -= Time.deltaTime; }
+        { jumpBufferCounter -= Time.deltaTime; }
     }
 
     private void GravityScaler()
@@ -296,7 +306,7 @@ public class MovementControls : MonoBehaviour
     {
         if (isCrouching == true && isOnPlatform && grounded && Input.GetKeyDown(KeyCode.Space)&& playerCollider.enabled)
         {
-            StartCoroutine(DisablePlayerCollider(cDisableTime));
+            StartCoroutine(DisablePlayerCollider(crouchDisableTime));
         }
     }
 
