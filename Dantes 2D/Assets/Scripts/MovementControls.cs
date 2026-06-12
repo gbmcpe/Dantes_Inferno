@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
@@ -149,12 +150,15 @@ public class MovementControls : MonoBehaviour
         JumpBufferer();
         JumpCooldownTimer();
         Jump();
-        GravityScaler();
+        //GravityScaler();
         //Crouching
         ToggleCrouch();
         Drop();
         //Wallsliding
         HandleWallSliding(moveInput);
+
+        isLedge = Physics2D.OverlapCircle(transform.position, groundCheckRadius, groundLayer);
+        print(isLedge);
     }
 
     private void Strafing(float moveInput)
@@ -191,7 +195,7 @@ public class MovementControls : MonoBehaviour
                 //disabled tests
                 //if (grounded) {print("Jumped from Grounded");}
                 //else if (!grounded && jCoyoteCounter > 0) {print("Jumped from Coyote Time");}
-
+                player.gravityScale = gravScaleUp;
                 player.linearVelocity = new Vector2(player.linearVelocity.x, jumpPressSpeed);
                 jumpCoyoteCounter = 0;
                 jumpBufferCounter = 0;
@@ -204,7 +208,7 @@ public class MovementControls : MonoBehaviour
             player.AddForceY(jumpHoldSpeed);
 
         }
-        else{isJumpDisable = true;}
+        else{isJumpDisable = true; player.gravityScale = gravScaleDown;}
     
     }
 
