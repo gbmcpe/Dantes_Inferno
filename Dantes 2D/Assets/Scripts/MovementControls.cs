@@ -311,7 +311,8 @@ public class MovementControls : MonoBehaviour
 
     private void GravityScaler()
     {
-        if (player.linearVelocityY > 0)
+        //changed it from >0 to >1  to attempt to stop 'hovering'
+        if (player.linearVelocityY > 1)
         {
             player.gravityScale = gravScaleUp;
         }
