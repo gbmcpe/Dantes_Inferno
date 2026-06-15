@@ -9,6 +9,10 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
+using Vector3 = UnityEngine.Vector3;
+using Vector2 = UnityEngine.Vector2;
+using UnityEngine.UIElements;
+
 public class MovementControls : MonoBehaviour
 {
 
@@ -58,7 +62,6 @@ public class MovementControls : MonoBehaviour
         //Counter variable for jump cooldown    
         private float jumpCooldownCounter;
 
-
 /// <summary>
 /// SENTINEL VARIABLES
 /// </summary>
@@ -72,11 +75,10 @@ public class MovementControls : MonoBehaviour
     public Transform groundCheck;
 //The layer where all Ground Objects reside
     public LayerMask groundLayer;
-     
-    private float lastXPos;
 
+    private float lastXPos;
 //Bool tracking if the player is touching the floor and can jump again
-    private bool grounded;
+    private bool isGrounded;
 //Bool tracking if the player is touching one of their sides on a wall
     private bool isTouchingWall;
     //private bool isWallSliding = false;
@@ -86,10 +88,14 @@ public class MovementControls : MonoBehaviour
     private bool isOnMovingGround;
 //Bool tracking if the player is on a platform
     private bool isOnPlatform;
+    [HideInInspector] public bool isLedgeDetected;
 
-    [HideInInspector] public bool isLedge;
+    private int facing = -1;
+
 //Bool tracking if the player's jump is totally disabled (like after they just jumped)
-    private bool isJumpDisable;
+    private bool canJump;
+    private bool canClimb = true;
+    private bool isClimbing;
 
 
 /// <summary>
@@ -105,6 +111,11 @@ public class MovementControls : MonoBehaviour
 //Player's collider
     private BoxCollider2D playerCollider;
     private Animator animator;
+
+    [SerializeField] private Vector2 offset1;
+    [SerializeField] private Vector2 offset2;
+    private Vector2 climbStartPos;
+    private Vector2 climbEndPos;
 
 
     #endregion
@@ -122,23 +133,31 @@ public class MovementControls : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
+
         float moveInput = Input.GetAxis("Horizontal");
-        
         GroundMovement(moveInput);
+        lastXPos = transform.position.x;   
+
         
-        lastXPos = transform.position.x;
+       
+        //CheckWallSliding();   
     }
 
     private void FixedUpdate()
     {
         CheckGrounded();
-        //CheckWallSliding();   
+
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
     }
 
     #endregion
 
     #region Voids
-  
+
     //Player Movement Method
     private void GroundMovement(float moveInput)
     {
@@ -150,20 +169,31 @@ public class MovementControls : MonoBehaviour
         JumpBufferer();
         JumpCooldownTimer();
         Jump();
+
+        CheckLedge();
+
+        //TODO: Airtime Increase
+
         //GravityScaler();
+
         //Crouching
         ToggleCrouch();
         Drop();
         //Wallsliding
         HandleWallSliding(moveInput);
 
-        isLedge = Physics2D.OverlapCircle(transform.position, groundCheckRadius, groundLayer);
-        print(isLedge);
+        //TODO: Fall Clamping
+
+
     }
 
     private void Strafing(float moveInput)
     {
         FlipCharacter(moveInput);
+
+        //TODO: Add Acceleration
+        //TODO: Add Deceleration
+        //TODO: Add Top Speed
         
         if (moveInput != 0)
         {
@@ -189,7 +219,7 @@ public class MovementControls : MonoBehaviour
         //you can jump
         if (jumpBufferCounter > 0 
             && !Input.GetKey(KeyCode.S)
-            && (grounded || jumpCoyoteCounter > 0)
+            && (isGrounded || jumpCoyoteCounter > 0)
             && jumpCooldownCounter <= 0)
         {
                 //disabled tests
@@ -200,15 +230,15 @@ public class MovementControls : MonoBehaviour
                 jumpCoyoteCounter = 0;
                 jumpBufferCounter = 0;
                 jumpCooldownCounter = jumpCooldown;
-                isJumpDisable = false;
-                grounded = false;
+                canJump = false;
+                isGrounded = false;
         }
-        else if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0 && !isJumpDisable)
+        else if (Input.GetKey(KeyCode.Space) && player.linearVelocityY>0 && !canJump)
         {
             player.AddForceY(jumpHoldSpeed);
 
         }
-        else{isJumpDisable = true; player.gravityScale = gravScaleDown;}
+        else{canJump = true; player.gravityScale = gravScaleDown;}
     
     }
 
@@ -226,59 +256,10 @@ public class MovementControls : MonoBehaviour
             gameObject.transform.localScale = new Vector2(0.8f, 1.8f); isCrouching = false;
             }
     }
-    
-    private void CheckGrounded()
-    {
 
-        Collider2D Ground = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-
-        if (Ground != null)
-        {
-            
-
-            if (Ground.gameObject.tag == "Moving")
-            {
-                print("movingground");
-                isOnMovingGround = true;
-                transform.SetParent(Ground.gameObject.transform, true);
-
-                grounded = true;
-            }
-            else if (Ground.gameObject.tag == "Platform" && groundCheck.position.y > Ground.transform.position.y)
-            {
-                print("platform");
-                isOnMovingGround = false;
-                isOnPlatform = true;
-                transform.SetParent(null, true);
-
-                grounded = true;
-            }
-            else
-            {
-                isOnMovingGround = false;
-                isOnPlatform = false;
-                transform.SetParent(null, true);
-
-                grounded = true;
-            }
-        }
-        else if (Ground == null)
-        { grounded = false; }
-
-    }
-
-
-//currently only seems to detect hitting the right of a wall
-    private void CheckWallSliding()
-    {isTouchingWall = Physics2D.Raycast(transform.position, spriteRenderer.flipX ? Vector2.left: Vector2.right, wallCheckDistance, groundLayer);
-        if (isTouchingWall == true)
-        { print("touchingwall"); }
-    }
-
- 
     private void HandleWallSliding(float moveInput)
     {
-        if (isTouchingWall == true && !grounded && moveInput == 0 && player.linearVelocityY <= 0)
+        if (isTouchingWall == true && !isGrounded && moveInput == 0 && player.linearVelocityY <= 0)
         {
             print("Wallsliding engaged");
            // isWallSliding = true;
@@ -293,7 +274,7 @@ public class MovementControls : MonoBehaviour
 
     private void CoyoteTimer()
     {
-      if (grounded)
+      if (isGrounded)
         { jumpCoyoteCounter = jumpCoyoteTime; }
         else
         { jumpCoyoteCounter -= Time.deltaTime; }
@@ -326,7 +307,7 @@ public class MovementControls : MonoBehaviour
     //Interact Button
     private void Drop()
     {
-        if (isCrouching == true && isOnPlatform && grounded && Input.GetKeyDown(KeyCode.Space)&& playerCollider.enabled)
+        if (isCrouching == true && isOnPlatform && isGrounded && Input.GetKeyDown(KeyCode.Space)&& playerCollider.enabled)
         {
             StartCoroutine(DisablePlayerCollider(crouchDisableTime));
         }
@@ -334,15 +315,108 @@ public class MovementControls : MonoBehaviour
 
     private void FlipCharacter(float moveInput)
     {
-        if ((moveInput > 0) && (transform.position.x > lastXPos))
-        {//We are to the right
-        spriteRenderer.flipX = true;
+        if ((moveInput > 0) && (transform.position.x > lastXPos)&&facing !=1)
+        {//We are to the right, facing positive infinity
+        transform.Rotate(0, 180f, 0);
+        facing = 1;
         }
-        else if ((moveInput <0) && (transform.position.x <= lastXPos))
-        {//We are to the left
-            spriteRenderer.flipX =false;
+        else if ((moveInput <0) && (transform.position.x <= lastXPos)&&facing !=-1)
+        {//We are to the left, facing negative infinity
+        transform.Rotate(0, 180f, 0);
+        facing = -1;
         }
     }
+    
+    #region Check Method Voids
+    private void CheckGrounded()
+    {
+
+        Collider2D Ground = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+
+        if (Ground != null)
+        {
+
+            if (Ground.gameObject.tag == "Moving")
+            {
+                print("movingground");
+                isOnMovingGround = true;
+                transform.SetParent(Ground.gameObject.transform, true);
+
+                isGrounded = true;
+            }
+            else if (Ground.gameObject.tag == "Platform" && groundCheck.position.y > Ground.transform.position.y)
+            {
+                print("platform");
+                isOnMovingGround = false;
+                isOnPlatform = true;
+                transform.SetParent(null, true);
+
+                isGrounded = true;
+            }
+            else
+            {
+                isOnMovingGround = false;
+                isOnPlatform = false;
+                transform.SetParent(null, true);
+
+                isGrounded = true;
+            }
+        }
+        else if (Ground == null)
+        { isGrounded = false; }
+
+    }
+
+    private void CheckLedge()
+    {
+        if (isLedgeDetected && canClimb && Input.GetKeyDown(KeyCode.Space))
+        {
+            print ("Climb Start");
+            canClimb = false;
+            Vector2 ledgePos = GetComponentInChildren<LedgeDetector>().transform.position;
+
+            climbStartPos = ledgePos+new Vector2(offset1.x*facing*-1, offset1.y);
+            climbEndPos = ledgePos+new Vector2(offset2.x*facing*-1, offset2.y);
+
+            isClimbing = true;
+        }
+
+        if(isClimbing)
+        {
+            print("Climb Lock");
+        //1    
+        transform.position = climbStartPos;
+
+        player.constraints |= RigidbodyConstraints2D.FreezePositionX | RigidbodyConstraints2D.FreezePositionY;
+
+        //Temp way to call this, will change once we have an actual climb animation to sync with
+        Invoke("LedgeClimbOver", 0.4f);
+        }
+    }
+    private void LedgeClimbOver()
+    {
+    isClimbing =false;
+    //2
+    transform.position = climbEndPos;
+    print("Climb End");
+
+    player.constraints &= ~RigidbodyConstraints2D.FreezePositionX;
+    player.constraints &= ~RigidbodyConstraints2D.FreezePositionY;
+
+    Invoke("AllowLedgeGrab", 0.25f);
+    }
+
+    private void AllowLedgeGrab() => canClimb=true;
+
+    
+//currently only seems to detect hitting the right of a wall
+    private void CheckWallSliding()
+    {isTouchingWall = Physics2D.Raycast(transform.position, spriteRenderer.flipX ? Vector2.left: Vector2.right, wallCheckDistance, groundLayer);
+        if (isTouchingWall == true)
+        { print("touchingwall"); }
+    }
+
+    #endregion
 
     #endregion
 
